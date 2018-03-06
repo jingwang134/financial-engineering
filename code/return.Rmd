@@ -1,0 +1,93 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+The data set Stock_bond.csv contains daily volumes and adjusted closing (AC) prices of stocks and the S&P 500 (columns B–W) and yields on bonds (columns X–AD) from 2-Jan-1987 to 1-Sep-2006.
+
+ton within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+points are plotted with the character “o”. To plot a line instead, use, for example plot(GM_AC, type = "l"). Similarly, plot(GM_AC, type = "b") plots both points and a line.
+```{r}
+setwd("/Volumes/win/intern/statfe/datasets")
+dat = read.csv("Stock_bond.csv",header=TRUE)
+names(dat)
+str(dat)
+attach(dat)
+head(dat)
+par(mfrow=c(2,2))
+plot(GM_AC,type="l")
+plot(F_AC,type="o")
+plot(X1.year.Treasury.Constant.Maturity.Rate,type="1")
+plot(X10.year.Treasury.Constant.Maturity.Rate,type="1")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+```{r return plot}
+n = dim(dat)[1]
+GMReturn = GM_AC[2:n]/GM_AC[1:(n-1)] - 1
+FReturn = F_AC[2:n]/F_AC[1:(n-1)] - 1
+
+#pdf("ReturnsLab01.pdf",width=6,height=5)
+par(mfrow=c(1,1))
+plot(GMReturn,FReturn)
+#graphics.off()
+MSFTReturn = MSFT_AC[-1]/MSFT_AC[-n] - 1
+MRKReturn = MRK_AC[-1]/MRK_AC[-n] - 1
+plot(MSFTReturn,MRKReturn)
+round(cor(MSFTReturn,MRKReturn),3)
+```
+Suppose a hedge fund owns $1,000,000 of stock and used $50,000 of its own capital and $950,000 in borrowed money for the purchase. Suppose that if the value of the stock falls below $950,000 at the end of any trading day, then the hedge fund will sell all the stock and repay the loan. This will wipe out its $50,000 investment. 
+The hedge fund is said to be leveraged 20:1 since its position is 20 times the amount of its own capital invested.
+Suppose that the daily log returns on the stock have a mean of 0.05/year and a standard deviation of 0.23/year. 253 trading days
+What is the probability that the value of the stock will be below $950,000 at the close of at least one of the next 45 trading days? 
+
+```{r simulation}
+rm(list=ls(all=TRUE))
+niter = 1e5
+below = rep(0,niter)#先初始化
+profit= rep(0,niter)
+set.seed(2009)
+options(warn=-1)
+for (i in 1:niter)
+{
+  r = rnorm(100,mean=.05/253,sd=.23/sqrt(253))
+  logPrice = log(1e6) + cumsum(r)#本金&return
+  minlogP = min(logPrice)
+  below[i] = as.numeric(minlogP < log(950000))
+
+}
+#
+mean(r)
+mean(below)
+mean(profit)
+```
+What is the probability that the hedge fund will make a profit of at least $100,000?
+
+```{r}
+?rnorm
+rep(0, 2)
+rep(1:4, each = 2)       # not the same.
+rep(1:4, c(2,2,2,2))     # same as second.
+rep(1:4, c(2,1,2,1))
+```
+In this section you will use simulations to see how stock prices evolve when the log-returns are i.i.d. normal, which implies that the price series is a geometric random walk.
+There are 253 trading days per year, so you are simulating 1 year of daily returns nine times. The price starts at 120.
+
+
+```{r}
+
+set.seed(2012)
+n = 253
+#pdf("FigA1.pdf",width = 6, height=6)  ########## Fig A.1
+par(mfrow=c(3,3))
+for (i in (1:9))
+{
+  logr = rnorm(n,0.05/253,0.2/sqrt(253))
+  price = c(120,120*exp(cumsum(logr)))
+  plot(price,type="b")
+}
+#graphics.off()
+```
+
+

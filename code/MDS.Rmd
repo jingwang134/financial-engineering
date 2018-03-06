@@ -1,0 +1,100 @@
+---
+title: "MDS"
+author: "Wj"
+date: "2018/2/26"
+output: html_document
+---
+swiss data that contains fertility and socio-economic data on 47 French speaking provinces in Switzerland.
+```{r data}
+data("swiss")
+str(swiss)
+head(swiss)
+```
+
+dist(x, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+
+This function computes and returns the distance matrix computed by using the specified distance measure to compute the distances between the rows of a data matrix.
+method	
+the distance measure to be used. This must be one of "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski". Any unambiguous substring can be given.
+
+cmdscale()
+Classical multidimensional scaling (MDS) of a data matrix. Also known as principal coordinates analysis
+cmdscale(d, k = 2, eig = FALSE, add = FALSE, x.ret = FALSE,
+         list. = eig || add || x.ret)
+k:the maximum dimension 
+```{r classical MDS}
+library(magrittr)
+library(dplyr)
+library(ggpubr)
+# Cmpute MDS
+mds <- swiss %>%
+  dist() %>%          
+  cmdscale() %>%
+  as_tibble()
+colnames(mds) <- c("Dim.1", "Dim.2")
+# Plot MDS
+ggscatter(mds, x = "Dim.1", y = "Dim.2",
+          label = rownames(swiss),
+          size = 1,
+          repel = TRUE)
+```
+
+## mutate
+mutate() adds new variables and preserves existing; transmute() drops existing variables.
+##as_tibble
+as_tibble is a new S3 generic with more efficient methods for matrices and data frames.faster than as.data.frame
+
+
+```{r k-means clustering, echo=FALSE}
+clust <- kmeans(mds, 3)$cluster %>%
+  as.factor()
+clust
+mds <- mds %>%
+  mutate(groups = clust)
+mds
+# Plot and color by groups
+ggscatter(mds, x = "Dim.1", y = "Dim.2", 
+          label = rownames(swiss),
+          color = "groups",
+          palette = "jco",
+          size = 1, 
+          ellipse = TRUE,
+          ellipse.type = "convex",
+          repel = TRUE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+nonmetric
+#Kruskal’s non-metric multidimensional scaling
+```{r}
+library(MASS)
+mds <- swiss %>%
+  dist() %>%          
+  isoMDS() %>%
+  .$points %>%
+  as_tibble()
+colnames(mds) <- c("Dim.1", "Dim.2")
+# Plot MDS
+ggscatter(mds, x = "Dim.1", y = "Dim.2", 
+          label = rownames(swiss),
+          size = 1,
+          repel = TRUE)
+
+```
+#Sammon’s non-linear mapping:
+```{r}
+library(MASS)
+mds <- swiss %>%
+  dist() %>%          
+  sammon() %>%
+  .$points %>%
+  as_tibble()
+colnames(mds) <- c("Dim.1", "Dim.2")
+# Plot MDS
+ggscatter(mds, x = "Dim.1", y = "Dim.2", 
+          label = rownames(swiss),
+          size = 1,
+          repel = TRUE)
+```
+
